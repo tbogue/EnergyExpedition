@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Energy Expedition</title>
+<style>
+:root{--ink:#192440;--sky:#83ccfa;--gold:#ffd45c;--paper:#fff9e8}
+*{box-sizing:border-box}
+body{margin:0;background:#24376e;color:var(--ink);font:17px/1.5 system-ui,-apple-system,sans-serif;background-image:linear-gradient(90deg,#ffffff03 1px,transparent 1px),linear-gradient(#ffffff03 1px,transparent 1px);background-size:24px 24px}
+button,input,select,textarea{font:inherit}
+button{min-height:48px;padding:11px 17px;border:3px solid var(--ink);border-radius:0;background:var(--gold);color:var(--ink);font-weight:800;box-shadow:4px 4px 0 var(--ink);cursor:pointer;touch-action:manipulation}
+button:hover:not(:disabled){background:#ffe698}
+button:active:not(:disabled){transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+button:disabled{background:#d2d7d9;color:#68727d;box-shadow:2px 2px 0 #6c788a;border-color:#6c788a;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:4px solid #e57c32;outline-offset:4px}
+button.secondary{background:#e5ecff}
+button.secondary:hover:not(:disabled){background:#cadbff}
+header{max-width:1190px;margin:auto;padding:22px 24px 18px;color:#fff9e8}
+.headerline{display:flex;justify-content:space-between;align-items:center;gap:20px}
+.header-actions{display:flex;gap:12px;flex-wrap:wrap}
+h1{font:900 clamp(23px,4vw,38px)/1.15 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:-1px;text-shadow:3px 3px #14203f;margin:4px 0}
+.reset{font-size:14px;flex-shrink:0;background:#fff9e8}
+.helpbutton{font-size:14px;background:#c8dcff}
+main{max-width:1190px;margin:auto;padding:0 24px 24px}
+.map{border:4px solid var(--ink);background:#a7c3f5;box-shadow:6px 6px 0 #14203f;padding:14px;margin-bottom:23px}
+.maplabel{font:800 12px ui-monospace,monospace;letter-spacing:1px;margin-bottom:11px}
+.mapnodes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.mapnodes button{background:#f6f2d8;padding:8px;display:flex;gap:9px;align-items:center;justify-content:center;font-size:15px;min-height:62px}
+.mapnodes button.active{background:var(--gold);outline:3px solid #fff5be;outline-offset:-7px}
+.mapnodes button.completed{background:#bfe6a8}
+.mapnodes button:disabled{background:#b5c0d5}
+.mapicon{width:34px;height:34px;flex-shrink:0;display:block}
+.mapicon .sprite{width:34px;height:34px}
+.mapstatus{display:block;font:700 10px ui-monospace,monospace;letter-spacing:.5px}
+.world{border:4px solid var(--ink);box-shadow:6px 6px 0 #14203f;background:var(--paper);margin-bottom:23px}
+.worldhead{display:flex;gap:15px;justify-content:space-between;align-items:center;padding:12px 17px;border-bottom:4px solid var(--ink);background:var(--gold)}
+.worldhead h2{font:900 20px ui-monospace,monospace;margin:0}
+.worldhead span{font:700 12px ui-monospace,monospace}
+.landscape{display:block;width:100%;height:190px;background:var(--sky);image-rendering:pixelated}
+.questgrid{display:grid;grid-template-columns:1.2fr 1fr;gap:22px;align-items:start}
+.panel{background:var(--paper);border:4px solid var(--ink);box-shadow:6px 6px 0 #14203f;margin-bottom:22px}
+.panel-title{padding:11px 18px;border-bottom:4px solid var(--ink);background:#c9d9ff;display:flex;align-items:center;justify-content:space-between;gap:12px;font:900 14px ui-monospace,monospace;text-transform:uppercase;letter-spacing:.4px}
+.panel-title.gold{background:var(--gold)}
+.content{padding:22px}
+h2{font-size:27px;line-height:1.2;margin:0 0 14px;letter-spacing:-.5px}
+h3{font-size:20px;margin:0 0 9px}
+p{margin:8px 0 15px}
+.guide{border-left:5px solid #4c73c2;background:#e7efff;padding:14px 16px;margin:16px 0}
+.guide.green{background:#e7f1d8;border-color:#5f8f42}
+.term{font-weight:850;color:#2e5b31}
+.actions{display:flex;gap:13px;flex-wrap:wrap;margin:18px 4px 4px 0}
+.feedback{border:2px solid #c68f31;background:#fff0bf;padding:13px 15px;margin:17px 0;min-height:55px;font-size:15px}
+.feedback.good{background:#e0efc8;border-color:#648e43}
+.small{font-size:15px}
+.tiny{font-size:13px;color:#4d5b6d}
+.requirements{font-size:14px;color:#4d5b6d;margin-top:20px}
+.inventory{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin-top:15px}
+.inventory.web{grid-template-columns:repeat(3,minmax(0,1fr))}
+.token{min-width:0;width:100%;height:126px;padding:7px 4px;background:#b9d4ed;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:14px;line-height:1.2}
+.token:hover:not(:disabled){background:#d0e4f4}
+.token.selected{background:#ffe18b;outline:3px solid #d97c28;outline-offset:2px}
+.tokenlabel{height:34px;display:flex;align-items:center;justify-content:center;width:100%;overflow-wrap:anywhere}
+.sprite{display:block;width:65px;height:65px;image-rendering:pixelated;flex-shrink:0}
+.chain{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;min-height:130px;background:#dfedcc;border:3px solid #687f48;padding:13px;margin:18px 0}
+.chainitem{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#b9d4ed;border:2px solid #657b97;min-width:77px;padding:7px;font-size:13px;font-weight:800;text-align:center}
+.chainitem .sprite{width:51px;height:51px}
+.sun{display:block;width:51px;height:51px}
+.arrow{font:900 25px ui-monospace,monospace;color:#7e4e12}
+.slots{display:flex;gap:10px}
+.slot{border:2px dashed #859669;width:52px;height:65px;display:grid;place-items:center;color:#647743;font:800 23px ui-monospace,monospace}
+label{display:block;margin:15px 0}
+select,input,textarea{display:block;border:2px solid #6a7890;background:white;color:var(--ink);border-radius:0;padding:12px;width:100%;min-height:48px;margin-top:7px}
+textarea{min-height:110px;resize:vertical}
+.answer-correct{border:3px solid #287344!important;background:#e0f2df!important}
+.answer-wrong{border:3px solid #b33036!important;background:#ffe3e3!important}
+.answer-status{display:block;font-size:13px;font-weight:750;margin-top:5px}
+.answer-status.good{color:#206234}
+.answer-status.bad{color:#a1222c}
+.websvg{display:block;width:100%;height:auto;image-rendering:pixelated}
+.links{display:flex;flex-wrap:wrap;gap:9px;margin-top:17px}
+.links button{font-size:13px;background:#e6eddd;min-height:44px;padding:7px 10px;border-width:2px;box-shadow:2px 2px var(--ink)}
+.pyramid{display:flex;flex-direction:column;align-items:center;gap:5px;margin:22px 0}
+.tier{border:2px solid var(--ink);padding:9px 5px;min-height:66px;text-align:center;font-weight:850;line-height:1.3}
+.tier small{display:block;font-size:13px;font-weight:500;margin-top:3px}
+.energybar{height:26px;background:linear-gradient(to right,#669b44 10%,#ffc267 10%);border:2px solid var(--ink);margin:12px 0}
+.reportheading{display:flex;justify-content:space-between;align-items:flex-start;gap:32px;margin-bottom:24px}
+.reportheading>div{flex:1}
+.reportname{flex:0 0 270px;max-width:100%;padding:5px;margin:0}
+.badge{display:inline-block;background:#ffdc70;border:2px solid var(--ink);padding:5px 10px;margin-bottom:12px;font:800 13px ui-monospace,monospace}
+.hide{display:none!important}
+.toolbar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+.written{white-space:pre-wrap;padding:12px 15px;border-left:4px solid #7e91bd;background:#f0f3fa}
+.summary h3{margin-top:23px}
+.summary svg{max-width:620px}
+.summary table{border-collapse:collapse;width:100%;text-align:left;font-size:15px}
+.summary th,.summary td{padding:10px;border-bottom:1px solid #aab4c4;vertical-align:top}
+footer{color:#cedaf8;text-align:center;font:12px/1.6 ui-monospace,monospace;padding:0 20px 25px}
+dialog{border:4px solid var(--ink);background:var(--paper);color:var(--ink);max-width:480px;width:calc(100% - 40px);padding:25px;box-shadow:8px 8px 0 #101a39}
+dialog::backdrop{background:#111a38bb}
+.spark{animation:glow 2.5s infinite}
+@keyframes glow{50%{opacity:.4}}
+
+/* Start screen */
+.intro-open #appHeader,.intro-open #habitatMap,.intro-open footer{display:none}
+.intro-open main{max-width:1280px;padding:18px}
+.splash{position:relative;isolation:isolate;overflow:hidden;border:5px solid #101c35;box-shadow:8px 8px 0 #101c35;background:#58a6ff;min-height:740px;padding:26px 34px 40px}
+.intro-scenery{position:absolute;inset:0;width:100%;height:100%;z-index:-1;image-rendering:pixelated}
+.splash-top{display:flex;justify-content:flex-end;margin-bottom:8px}
+.intro-banner{display:grid;grid-template-columns:1fr 1fr;gap:25px;align-items:center;margin:5px 0 28px}
+.intro-logo{margin:0;transform:rotate(-3deg);font:1000 clamp(35px,6.6vw,74px)/.97 ui-monospace,SFMono-Regular,Consolas,monospace;font-style:italic;letter-spacing:-3px;filter:drop-shadow(4px 6px 0 #101c35)}
+.intro-logo span{display:block;color:#ffdc43;-webkit-text-stroke:2px #111b30;paint-order:stroke fill;text-shadow:2px 2px 0 #111b30,-2px -2px 0 #111b30,2px -2px 0 #111b30,-2px 2px 0 #111b30}
+.intro-logo span+span{color:#fffdf2;font-size:.85em;margin-top:7px}
+.intro-logo:after{content:"";display:block;width:86%;height:9px;background:#64c64a;border:3px solid #111b30;transform:rotate(2deg);margin-top:13px}
+.habitat-trail{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;position:relative}
+.habitat-trail:before{content:"";position:absolute;top:52px;left:10%;right:10%;border-top:5px dashed white;z-index:-1}
+.habitat-stop{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;filter:drop-shadow(3px 4px 0 #14203f)}
+.habitat-stop>svg{width:100%;max-width:120px;height:86px;display:block;image-rendering:pixelated}
+.habitat-stop span{width:100%;padding:6px 3px;background:#fff3cd;border:3px solid #14203f;text-align:center;font-weight:900;font-size:16px}
+.intro-paper{position:relative;background:#fff9e8;border:4px solid #14203f;box-shadow:6px 7px 0 #14203f;padding:26px 28px;max-width:980px;margin:0 auto}
+.intro-ribbon{display:inline-block;background:#ffcf4d;border:3px solid #14203f;padding:5px 16px;transform:rotate(-2deg);margin:-42px 0 16px -12px;font:900 16px ui-monospace,monospace;box-shadow:3px 3px #14203f}
+.intro-paper h2{font-size:clamp(26px,4vw,41px);font-weight:950;margin-bottom:12px}
+.intro-purpose{font-size:18px;max-width:800px}
+.intro-first{background:#ffe997;border:2px solid #c39431;padding:12px 16px;margin:17px 0;font-weight:800}
+.intro-how{display:grid;grid-template-columns:1fr 1fr;gap:14px 23px;margin:22px 0}
+.intro-step{display:grid;grid-template-columns:35px 1fr;gap:12px;align-items:start}
+.stepnum{background:#344bb3;color:white;border:2px solid #14203f;text-align:center;font:900 22px/32px ui-monospace,monospace;box-shadow:2px 2px #14203f}
+.intro-step strong{display:block;font-size:17px}
+.intro-step p{font-size:15px;margin:3px 0}
+.intro-bottom{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;border-top:2px dashed #c4b98e;padding-top:19px}
+.startbutton{font-size:21px;padding:16px 30px;background:#ffda23;box-shadow:5px 6px #14203f,inset 0 3px #fff5a0;border-width:4px}
+.intro-creatures{display:flex;align-items:center;gap:6px}
+.intro-creatures .sprite{width:47px;height:47px}
+.intro-save{font-size:13px;margin:15px 0 0;color:#4d5b6d}
+@media(prefers-reduced-motion:reduce){.spark{animation:none}}
+@media(max-width:850px){.questgrid{grid-template-columns:1fr}.mapnodes button{flex-direction:column;gap:2px}.landscape{height:155px}.content{padding:18px}.intro-banner{grid-template-columns:1fr;gap:25px}.intro-logo{max-width:570px;margin:0 auto;font-size:clamp(36px,9vw,67px)}.habitat-trail{max-width:550px;width:100%;margin:auto}.splash{padding:20px 23px 35px}.intro-paper{margin-top:35px}}
+@media(max-width:580px){
+main{padding:0 12px 20px}header{padding:18px 14px}.headerline{gap:12px;align-items:flex-start;flex-wrap:wrap}.header-actions{gap:9px}.reset,.helpbutton{padding:9px;font-size:12px}h1{font-size:23px}.map{padding:10px}.mapnodes{gap:8px}.mapnodes button{font-size:11px;border-width:2px;padding:8px 3px;box-shadow:2px 2px var(--ink)}.mapstatus{font-size:8px}.worldhead{padding:10px 12px}.worldhead h2{font-size:16px}.worldhead span{font-size:10px}.inventory{grid-template-columns:repeat(2,minmax(0,1fr))}.reportheading{flex-wrap:wrap;gap:16px}.reportname{margin-left:auto}.chain{gap:5px;padding:10px}.chainitem{min-width:62px;font-size:11px;padding:5px}.chainitem .sprite,.sun{width:40px;height:40px}.arrow{font-size:20px}.token{font-size:13px}
+.intro-open main{padding:9px}.splash{padding:14px 14px 28px;border-width:3px}.intro-how{grid-template-columns:1fr}.intro-paper{padding:21px 17px}.intro-purpose{font-size:16px}.intro-logo{letter-spacing:-2px}.habitat-stop span{font-size:14px}.habitat-stop>svg{height:68px}.intro-bottom{justify-content:center;text-align:center}.startbutton{width:100%}.intro-ribbon{font-size:14px}
+}
+@media print{
+body{background:white;color:#111;font-size:11pt}
+header,.map,footer,#play,#intro,dialog,.toolbar,.noprint{display:none!important}
+main{padding:0;max-width:none}.summary{display:block!important;border:0;box-shadow:none}.summary .content{padding:0}
+.summary .panel-title{background:white;border:0;padding:0 0 12px}.summary h2{font-size:22pt}
+.summary h3{break-after:avoid}.reportblock,.written,.pyramid,.chain,.websvg{break-inside:avoid}
+.summary .websvg{height:230px;width:100%}
+.tier,.chain,.chainitem{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+.summary table{font-size:10pt}.summary tr{break-inside:avoid}.written{background:white}
+}
+@page{margin:15mm}
+</style>
+</head>
+<body class="intro-open">
+<header id="appHeader"><div class="headerline"><h1>ENERGY EXPEDITION</h1><div class="header-actions"><button class="helpbutton" onclick="showIntro()">How to play</button><button class="reset" onclick="openReset()">↻ Reset all</button></div></div></header>
+<main>
+<section id="intro" aria-label="Welcome to Energy Expedition"></section>
+<nav class="map" id="habitatMap" aria-label="Habitat journey"><div class="maplabel">YOUR EXPEDITION MAP</div><div class="mapnodes" id="navigation"></div></nav>
+<div id="play"></div>
+<section id="report" class="panel summary hide"></section>
+</main>
+<footer>Hints and retries are unlimited.<br>Progress stays in this browser when storage is available.</footer>
+<dialog id="resetDialog" aria-labelledby="resetTitle">
+<h2 id="resetTitle">Start a new expedition?</h2><p>This clears your food chain, food web, answers, name, and written explanations in this browser.</p><p>Print or save your field report first if you need it.</p>
+<div class="actions"><button onclick="resetGame()">Reset all</button><button class="secondary" onclick="document.getElementById('resetDialog').close()">Keep my progress</button></div>
+</dialog>
+<script>
+const $=s=>document.querySelector(s);
+const palette={".":"",K:"#192440",G:"#4d8a36",L:"#93c94b",D:"#31572d",T:"#b67a4b",W:"#fff5d8",C:"#c7cbd7",E:"#f3b28a",O:"#ed8c35",R:"#bd542b",Y:"#ffd45c",U:"#5eabd9",A:"#9bdde5"};
+const art={
+grass:["................","................",".....L.....L....","..L..L..L..L....","..LG.L..L.LG....","...G.L.GL.G.....","...GLG.GL.G..L..","....GG.GLG..LG..","....GGLGG..LG...","..L..GGGG.GG....","...LGGGGGGG.....","....GGGGGG......","..DDDDDDDDDDD...","...TTTTTTTTT....","....TTTTTTT.....","................"],
+rabbit:[".....WW..WW.....",".....WK..WK.....",".....WE..WE.....",".....WW..WW.....","......WWWW......",".....WWWWWW.....","....WWKWWWWW....","....WWWWWWWE....",".....WWWWW......","..WWWWWWWWW.....",".WWWWWWWWWWW....","WWWWWWWWWWWW....","CWWWWWWWWWWW....",".CCWWWWWWWW.....","...WWWW..WWWW...","................"],
+fox:["....O.....O.....","...OKO...OKO....","...OOOOOOOOO....","...OOKOOOKOO....","....OOWWWOO.....",".....WWKWW......","......WWW.......",".....OOOOO......","....OOOOOOO.....","...OOOOOOOOO....","WW.OOOOWWOOOO...","WWWOOOOWWOOOO...",".WOOOOOWWOOO....","...KOO....OOK...","...KKK....KKK...","................"],
+hawk:["................",".......TTT......","......TTWWY.....","......TKWWYY....","TT....TTTT......",".TTT..TTTT..TTT.","..TTTTTTTTTTTT..","...TTTTWTTTTT...","....TTWWWTTT....",".....TWWWT......",".....TTTTT......","......TTT.......",".....TYTY.......","......T.T.......","................","................"],
+algae:["................","................","....L.......L...","...GL..L...GL...","...G...GL..G....","...GL...G..GL...","....G...G...G...","....GL..GL..G...",".....G...G.GL...",".....GL..G.G....","......G.GLG.....","......GGGG......",".....DDDDDD.....","....DDDDDDDD....","................","................"],
+snail:["................","................","................",".....TTTT.......","....TOOOOT......","...TOOTTOOT.....","...TOTKTOOT.....","...TOOTTOOT..G.G","....TOOOOT...K.K",".....TTTT...GGGG","...GGGGGGGGGGGG.","..GGGGGGGGGGGG..","...DDDDDDDDDD...","................","................","................"],
+zoop:["................","......Y..Y......","......T..T......",".......TT.......","......OOOO......",".....OWKOOO.....","....OOOOOOOO....",".....ROOOOR.....","......ROOR......",".....TOTTOT.....","....T.OO..T.....","...T..OO...T....",".....O..O.......","....O....O......","................","................"],
+sardine:["................","................","................",".......U........","......UUU.......","....UUUUUUU.....","..UUUUUUUUUU..U.","..UUKUUUUUUUUUU.",".UUUUUUUUUUUUUU.","..AAAAAAUUUU..U.","...AAAAAAUU.....","......UUU.......",".......U........","................","................","................"],
+phyto:["................","......L.........",".....LGL........","......G.........","...L..G..L......","..LGLGGGLGL.....","...GGGLGGG......","....GLKLG.......","...GGGLGGG......","..LGLGGGLGL.....","...L..G..L......","......G.........",".....LGL........","......L.........","................","................"]
+};
+art.krill=art.zoop;
+const specialArt={
+fish:`<path fill="#17243c" d="M9 4h4v3h3v1h3v2h1V7h3v10h-3v-3h-1v2h-3v1H7v-1H4v-2H2v-4h2V8h3V7h2z"/><path fill="#f18a32" d="M7 8h9v1h3v2h2V9h1v6h-1v-2h-2v2h-3v1H7v-1H4v-2H3v-2h1V9h3z"/><path fill="#ffd475" d="M5 13h12v2H7v-1H5zM10 5h2v2h-2z"/><path fill="#cc4e30" d="M12 10h3v1h1v2h-2v1h-2zM20 10h1v4h-1z"/><rect x="5" y="10" width="3" height="3" fill="#fffbed"/><rect x="5" y="11" width="2" height="2" fill="#17243c"/><rect x="9" y="9" width="1" height="5" fill="#d2632d"/>`,
+tuna:`<path fill="#14213a" d="M9 4h3v3h4v1h3v1h2V6h2v4h-1v4h1v4h-2v-3h-2v1h-4v1H8v-1H5v-1H3v-1H1v-3h1V9h3V8h4z"/><path fill="#305c9a" d="M5 9h12v1h3v1h1v2h-1v1h-3v1H6v-1H3v-1H2v-1h1v-1h2z"/><path fill="#6aa9cf" d="M6 9h10v1H6zM10 6h1v2h-1z"/><path fill="#e5f6ed" d="M3 12h15v1h-1v1H6v-1H3z"/><path fill="#e9ba4c" d="M12 12h3v3h-1v1h-1v-2h-1z"/><path fill="#7ebbd2" d="M21 8h1v3h-1zM21 14h1v2h-1z"/><rect x="4" y="10" width="3" height="3" fill="#f8fbef"/><rect x="4" y="11" width="2" height="2" fill="#14213a"/><path fill="#17243c" d="M8 10h1v4H8zM1 12h2v1H1z"/>`,
+heron:`<path fill="#17243c" d="M9 15h2v6h3v1H8v-1h1zM13 15h2v5h3v1h-5z"/><path fill="#17243c" d="M5 10h7V7h1V5h1V3h2V2h4v1h3v2h-3v2h-3v5h-1v3h-2v2H5v-1H2v-2h1v-2h2z"/><path fill="#fff9e8" d="M15 4h4v2h-3v2h-1v4h-1v2h-2v-3h1V7h1V5h1z"/><path fill="#e5e9e4" d="M5 11h7v2h2v2h-1v1H5v-1H3v-1h2z"/><path fill="#7191af" d="M6 12h5v1h2v2H6v-1H4v-1h2z"/><path fill="#aac0ce" d="M7 12h3v1h2v1H7z"/><path fill="#ffd062" d="M19 4h4v1h-4z"/><rect x="17" y="4" width="1" height="1" fill="#17243c"/><path fill="#e9ba4c" d="M10 17h1v3h-1zM14 17h1v2h-1z"/>`
+};
+const animals={grass:{n:"Grass"},rabbit:{n:"Rabbit"},fox:{n:"Fox"},hawk:{n:"Hawk"},algae:{n:"Algae"},snail:{n:"Snail"},zoop:{n:"Zooplankton"},fish:{n:"Small fish"},heron:{n:"Heron"},phyto:{n:"Phytoplankton"},krill:{n:"Krill"},sardine:{n:"Sardines"},tuna:{n:"Tuna"}};
+function sprite(id,extra=""){
+const custom=specialArt[id],size=custom?24:16;
+const content=custom||(art[id]||art.grass).map((r,y)=>r.split("").map((c,x)=>palette[c]?`<rect x="${x}" y="${y}" width="1" height="1" fill="${palette[c]}"/>`:"").join("")).join("");
+return `<svg class="sprite" ${extra} viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" aria-hidden="true">${content}</svg>`;
+}
+function sunSVG(){return `<svg class="sun" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><path d="M7 0h2v3H7zM7 13h2v3H7zM0 7h3v2H0zM13 7h3v2h-3zM2 2h2v2H2zM12 2h2v2h-2zM2 12h2v2H2zM12 12h2v2h-2z" fill="#ed9e29"/><path d="M5 4h6v1h1v6h-1v1H5v-1H4V5h1z" fill="#ffd45c"/></svg>`}
+function flagSVG(){return `<svg class="mapicon" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><path fill="#192440" d="M3 1h1v14H3zM2 14h4v2H2z"/><path fill="#fff9e8" d="M4 1h10v8H4z"/><path fill="#192440" d="M4 1h2v2H4zM8 1h2v2H8zM12 1h2v2h-2zM6 3h2v2H6zM10 3h2v2h-2zM4 5h2v2H4zM8 5h2v2H8zM12 5h2v2h-2zM6 7h2v2H6zM10 7h2v2h-2z"/></svg>`}
+const allowed=["algae>snail","algae>zoop","algae>fish","zoop>fish","snail>fish","fish>heron","snail>heron"];
+const correct={
+producer:"Grass",consumer:"They get energy by eating organisms.",herbivore:"It eats a producer.",carnivore:"It eats other animals.",
+photo:"Stores captured light energy in sugars.",resp:"Both producers and consumers.",trophic:"Level 2",
+loss:"Organisms use energy; some leaves as heat, waste, and uneaten material.",pyramid:"Energy available at each trophic level."
+};
+const groups=[["producer","consumer","herbivore","carnivore"],["photo","resp","trophic"],["loss","pyramid"]];
+const freshInvestigation=()=>({removed:"",consumer:"",alternative:"",observation:"",checked:false});
+const blank=()=>({stage:0,chain:[],chainOK:false,cq:false,edges:[],webOK:false,wq:false,energy:["","",""],energyOK:false,eq:false,answers:["","",""],name:"",vocab:{},results:{},invest:freshInvestigation()});
+let state=blank(),selected=null,inIntro=true;
+try{
+const old=JSON.parse(localStorage.getItem("energy-expedition-v1"));
+if(old&&Array.isArray(old.chain)&&Array.isArray(old.answers))state={...blank(),...old,results:old.results||{},invest:{...freshInvestigation(),...(old.invest||{})}};
+}catch(e){}
+function save(){try{localStorage.setItem("energy-expedition-v1",JSON.stringify(state))}catch(e){}}
+function esc(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function message(id,text,good=false){const e=$("#"+id);if(e){e.textContent=text;e.className="feedback"+(good?" good":"")}}
+function setResult(id,ok,text){state.results[id]={ok,text:text||(ok?"✓ Correct":"✗ Try again")}}
+function clearResult(id){delete state.results[id]}
+function paintAnswers(){
+document.querySelectorAll("[data-answer]").forEach(el=>{
+const id=el.dataset.answer,r=state.results[id],status=document.querySelector(`[data-status="${id}"]`);
+el.classList.toggle("answer-correct",!!r&&r.ok);el.classList.toggle("answer-wrong",!!r&&!r.ok);
+if(r&&!r.ok)el.setAttribute("aria-invalid","true");else el.removeAttribute("aria-invalid");
+if(status){status.textContent=r?r.text:"";status.className="answer-status"+(r?(r.ok?" good":" bad"):"")}
+});
+}
+function answerStatus(id){return `<span class="answer-status" id="status-${id}" data-status="${id}" aria-live="polite"></span>`}
+function chainCorrect(){return state.chain.length===3&&state.chain[0]==="grass"&&state.chain[1]==="rabbit"&&["fox","hawk"].includes(state.chain[2])}
+function webCorrect(){return state.edges.length===7&&new Set(state.edges).size===7&&allowed.every(e=>state.edges.includes(e))}
+function energyCorrect(){return [1000,100,10].every((v,i)=>String(state.energy[i]).trim()!==""&&Number(state.energy[i])===v)}
+function notesCorrect(n){return groups[n].every(id=>state.vocab[id]===correct[id])}
+function affectedConsumers(id){return allowed.filter(e=>e.startsWith(id+">")).map(e=>e.split(">")[1])}
+function remainingFoods(removed,consumer){return allowed.filter(e=>e.endsWith(">"+consumer)&&!e.startsWith(removed+">")).map(e=>e.split(">")[0])}
+function investigationValid(){
+const i=state.invest;
+return ["algae","snail","zoop","fish"].includes(i.removed)&&affectedConsumers(i.removed).includes(i.consumer)&&i.alternative===(remainingFoods(i.removed,i.consumer).length?"yes":"no")&&i.observation.trim().length>0;
+}
+function complete(n){
+if(n===0)return state.chainOK&&chainCorrect()&&state.cq&&notesCorrect(0);
+if(n===1)return state.webOK&&webCorrect()&&state.wq&&notesCorrect(1)&&state.invest.checked&&investigationValid();
+if(n===2)return state.energyOK&&energyCorrect()&&state.eq&&notesCorrect(2);
+return false;
+}
+function available(){let n=0;while(n<3&&complete(n))n++;return n}
+function refreshLocks(){
+const max=available();
+$("#navigation").innerHTML=["Meadow","Pond","Ocean","Field report"].map((name,i)=>`<button class="${state.stage===i?"active":i<3&&complete(i)?"completed":""}" ${i>max?"disabled":""} onclick="go(${i})"><span class="mapicon">${i===3?flagSVG():sprite(["grass","fish","tuna"][i])}</span><span>${name}<span class="mapstatus">${i>max?"LOCKED":state.stage===i?"YOU ARE HERE":i<3&&complete(i)?"COMPLETE":"OPEN"}</span></span></button>`).join("");
+document.querySelectorAll("[data-next]").forEach(b=>b.disabled=Number(b.dataset.next)>max);
+paintAnswers();save();
+}
+function changeVocab(id,value){
+state.vocab[id]=value;clearResult(id);
+const n=groups.findIndex(g=>g.includes(id));state[["cq","wq","eq"][n]]=false;
+message(["mq","pq","oq"][n],"Answer changed. Check your answers again to complete this section.");refreshLocks();
+}
+function options(id,q,choices){return `<label>${q}<select data-answer="${id}" aria-describedby="status-${id}" onchange="changeVocab('${id}',this.value)"><option value="">Choose an answer</option>${choices.map(c=>`<option ${state.vocab[id]===c?"selected":""}>${c}</option>`).join("")}</select>${answerStatus(id)}</label>`}
+function placedSprite(id,x,y,size){return sprite(id,`x="${x}" y="${y}" width="${size}" height="${size}"`).replace('class="sprite"','')}
+
+/* Illustrated start screen */
+function splashLandscape(){
+const tree=(x,y,s)=>`<g transform="translate(${x} ${y}) scale(${s})"><path d="M30 45h15v90H30z" fill="#653e30"/><path d="M34 45h6v90h-6z" fill="#a46b3a"/><path d="M15 10h40v10h15v45H55v15H15V65H0V25h15z" fill="#183e38"/><path d="M15 8h40v12h14v30H55v14H15V50H3V25h12z" fill="#3e862f"/><path d="M20 7h30v12h12v20H49v10H18V38H8V24h12z" fill="#72b639"/><path d="M23 10h19v10H23zM10 26h17v9H10zM45 22h13v12H45z" fill="#b0dd4f"/></g>`;
+return `<svg class="intro-scenery" viewBox="0 0 1100 850" preserveAspectRatio="xMidYMid slice" shape-rendering="crispEdges" aria-hidden="true">
+<defs><linearGradient id="introSky" x2="0" y2="1"><stop stop-color="#1955df"/><stop offset=".58" stop-color="#62bcff"/><stop offset="1" stop-color="#c2edff"/></linearGradient></defs>
+<rect width="1100" height="850" fill="url(#introSky)"/>
+<path d="M39 28h41V16h35v12h16v43h-12v17H58V76H39z" fill="#fff45e"/><path d="M25 24h13v13H25zM135 42h25v9h-25zM77 0h10v11H77zM86 96h10v22H86zM10 65h22v9H10zM126 8h10v15h-10z" fill="#ffd52f"/>
+<path d="M250 76h25V63h40V49h25v14h35v13h30v14H250zM825 55h24V39h22V23h25v16h25v16h24v15H825zM965 171h25v-15h24v-14h28v14h35v15h23v16H965zM55 207h30v-13h31v-13h28v13h32v13h34v16H55z" fill="#e9f9ff"/>
+<path d="M0 420h50v-30h40v-30h45v-40h40v-40h40v35h35v30h45v35h50v40h60v-35h40v-35h40v-35h40v-45h40v-40h40v40h40v35h40v45h40v45h40v35h50v-25h40v-40h40v-40h40v35h40v40h40v35h55v440H0z" fill="#4c83b5"/>
+<path d="M110 360h25v-40h40v-40h40v35h35v30h-30v-13h-20v-20h-20v22h-25v26zM495 350h25v-35h40v-45h40v-40h40v40h40v35h-35v-12h-15v-22h-20v25h-25v20h-25v17h-40z" fill="#d9f3ff"/>
+<path d="M0 470h80v-25h80v-20h90v20h80v25h100v-20h100v-15h110v20h100v20h80v-30h100v20h120v385H0z" fill="#3b8c55"/>
+<path d="M0 545h100v-22h140v22h180v-15h150v-20h140v20h180v-14h110v334H0z" fill="#82bd36"/>
+<path d="M0 718h90v-9h90v9h140v-12h110v12h150v-9h110v9h170v-12h140v12h100v30H0z" fill="#477b2d"/>
+<path d="M0 748h1100v102H0z" fill="#9e6a43"/><path d="M0 748h1100v14H0z" fill="#cee85b"/>
+<path d="M0 772h75v13H0zM110 790h50v12h-50zM200 765h65v15h-65zM320 807h80v14h-80zM460 779h60v13h-60zM600 800h80v13h-80zM780 765h70v13h-70zM900 795h70v12h-70zM1030 773h70v14h-70z" fill="#815037"/>
+${tree(-25,370,1.7)}${tree(1000,420,1.5)}${tree(118,515,.7)}${tree(915,520,.7)}
+${Array.from({length:25},(_,j)=>{const x=(j*137+30)%1100,y=615+(j*37)%100,c=j%3===0?"#ffb9db":"#fffbe8";return `<path d="M${x+3} ${y+8}h3v14h-3z" fill="#44772c"/><path d="M${x} ${y}h9v3h3v6h-3v3h-9V9h-3V3h3z" fill="${c}" transform="translate(0 0)"/><rect x="${x+3}" y="${y+3}" width="4" height="4" fill="#ffd14b"/>`}).join("")}
+<path d="M230 706h45v-10h30v10h15v25h-100v-15h10zM795 690h45v12h25v27h-100v-24h30z" fill="#526678"/><path d="M235 706h35v-6h27v8h-27v11h-35zM798 696h37v10h-37z" fill="#adbac6"/>
+</svg>`;
+}
+function habitatPicture(n){
+const inside=[
+`<path d="M8 58h84v18H8z" fill="#17243c"/><path d="M12 52h76v15H12z" fill="#7e5731"/><path d="M12 48h76v12H12z" fill="#8bd83c"/><path d="M47 23h10v31H47z" fill="#73482c"/><path d="M32 10h37v10h10v21H65v8H34v-9H24V21h8z" fill="#17243c"/><path d="M34 14h30v9h10v14H61v8H37v-9H29V24h5z" fill="#69b935"/><path d="M39 15h18v9H39z" fill="#b7e44d"/><rect x="20" y="47" width="5" height="5" fill="#fff6d4"/><rect x="73" y="48" width="5" height="5" fill="#ff97ba"/>`,
+`<path d="M7 48h86v24H7z" fill="#17243c"/><path d="M12 44h76v24H12z" fill="#7e5731"/><path d="M12 39h76v19H12z" fill="#84c83e"/><path d="M20 43h61v14H20z" fill="#1f739f"/><path d="M25 43h49v10H25z" fill="#5ec8e2"/><path d="M40 49h12v5H40zM68 46h9v4h-9z" fill="#a0dc4c"/><path d="M61 16h5v24h-5zM72 22h5v18h-5zM53 24h4v15h-4z" fill="#294f28"/>`,
+`<path d="M7 53h86v19H7z" fill="#17243c"/><path d="M12 50h76v16H12z" fill="#d2ba72"/><path d="M12 43h19V32h12V20h14V10h19v9h10v29h-9v11H12z" fill="#17243c"/><path d="M16 44h20V34h12V24h14V14h12v9h9v21H72v11H16z" fill="#328ec8"/><path d="M37 36h11V26h14V17h12v8H64v8H53v11H41v7H28v-7h9z" fill="#effaff"/><path d="M62 34h12v9H62zM15 51h14v5H15z" fill="#9cdef4"/>`
+][n];
+return `<svg viewBox="0 0 100 80" shape-rendering="crispEdges" aria-hidden="true">${inside}</svg>`;
+}
+function renderIntro(){
+const hasProgress=state.chain.length>0||Object.values(state.vocab).some(Boolean)||state.edges.length>0;
+$("#intro").innerHTML=`<div class="splash">
+${splashLandscape()}
+<div class="splash-top"><button class="reset" onclick="openReset()">↻ Reset all</button></div>
+<div class="intro-banner"><h1 class="intro-logo"><span>ENERGY</span><span>EXPEDITION</span></h1>
+<div class="habitat-trail">${["Meadow","Pond","Ocean"].map((name,n)=>`<div class="habitat-stop">${habitatPicture(n)}<span>${name}</span></div>`).join("")}</div></div>
+<div class="intro-paper">
+<div class="intro-ribbon">YOUR ADVENTURE STARTS HERE</div>
+<h2>Follow the sunlight. Discover the connections.</h2>
+<p class="intro-purpose">Explore three habitats to learn how energy moves through an ecosystem. Build a <strong>food chain</strong>, connect a <strong>food web</strong>, and discover why an <strong>energy pyramid</strong> gets smaller toward the top.</p>
+<div class="intro-first">Start with the activity on the LEFT. Then answer the questions on the RIGHT.</div>
+<div class="intro-how">
+<div class="intro-step"><span class="stepnum">1</span><div><strong>Explore and build first</strong><p>Read the directions on the left and complete the main activity. Tap organisms to build connections; arrows follow the energy.</p></div></div>
+<div class="intro-step"><span class="stepnum">2</span><div><strong>Use your discoveries</strong><p>Answer the field-note questions on the right. Use the activity and vocabulary explanations to help you.</p></div></div>
+<div class="intro-step"><span class="stepnum">3</span><div><strong>Check, revise, and unlock</strong><p>Press the check buttons. Green means correct; red means try again. Finish every task, including the pond’s further investigation, to unlock the next habitat.</p></div></div>
+<div class="intro-step"><span class="stepnum">4</span><div><strong>Share what you learned</strong><p>Finish with a field report containing your diagrams, pond observations, and written explanations. Print it or save it as a PDF.</p></div></div>
+</div>
+<p class="tiny">On a smaller screen, the main activity appears above the field notes. Complete it first, then scroll down.</p>
+<div class="intro-bottom"><div class="intro-creatures" aria-hidden="true">${sprite("grass")}<span class="arrow">→</span>${sprite("rabbit")}<span class="arrow">→</span>${sprite("hawk")}</div><button class="startbutton" onclick="startGame()">${hasProgress?"Continue expedition":"Start expedition"} →</button></div>
+${hasProgress?'<p class="intro-save">Your saved progress is ready. Continue where you left off, or use Reset all to begin again.</p>':'<p class="intro-save">Hints and retries are unlimited. Your progress is saved in this browser when storage is available.</p>'}
+</div></div>`;
+}
+function showIntro(){save();inIntro=true;render();window.scrollTo(0,0)}
+function startGame(){inIntro=false;render();window.scrollTo(0,0)}
+
+/* Habitat scenes and activities */
+function scenery(n){
+const sea=n===2,pond=n===1;
+return `<svg class="landscape" viewBox="0 0 960 190" preserveAspectRatio="xMidYMid slice" shape-rendering="crispEdges" role="img" aria-label="${["Pixel meadow with grass, rabbit, and hawk","Pixel pond with algae, fish, and heron","Pixel ocean with plankton and fish"][n]}">
+<rect width="960" height="190" fill="${sea?"#83c8f0":"#8fd0fa"}"/>
+<path d="M70 28h25V18h45v10h20v17H70zM390 42h20V32h45v10h30v17h-95z" fill="#eff9ff"/>
+<path d="M815 14h32v8h8v32h-8v8h-32v-8h-8V22h8z" fill="#ffdf65"/>
+<path d="M828 0h6v9h-6zM828 69h6v12h-6zM788 34h12v6h-12zM862 34h12v6h-12z" fill="#ffdf65" class="spark"/>
+${sea?`<path d="M0 86h80v-6h80v6h100v-6h80v6h120v-6h100v6h100v-6h120v6h180v104H0z" fill="#408bbc"/><path d="M0 122h960v68H0z" fill="#286493"/><path d="M0 174h70v-8h60v8h100v-8h70v8h180v-7h130v7h350v16H0z" fill="#d8c88f"/><path d="M820 88h12v75h-12zM792 100h8v50h-8zM850 105h8v60h-8z" fill="#bfdde5" opacity=".25"/>${placedSprite("phyto",100,100,58)}${placedSprite("krill",300,110,60)}${placedSprite("sardine",490,100,70)}${placedSprite("tuna",660,105,95)}`:
+`<path d="M0 100h80V86h80V72h100v14h80v14h100V88h120v12h80V82h120v18h200v90H0z" fill="#76a45a"/>
+<path d="M0 130h160v-8h140v8h190v-8h100v8h150v-8h120v8h100v60H0z" fill="#94bc58"/>
+<path d="M50 50h24v10h16v18h12v40H22V78h12V60h16z" fill="#355e38"/><path d="M57 109h12v44H57z" fill="#815337"/>
+<path d="M884 55h24v15h15v20h15v38h-83V90h14V70h15z" fill="#355e38"/><path d="M889 116h12v39h-12z" fill="#815337"/>
+${pond?`<path d="M230 145h50v-10h360v10h90v35H230z" fill="#63b6db"/><path d="M250 164h420v16H250z" fill="#418fbb"/><path d="M0 180h960v10H0z" fill="#5b773b"/>${placedSprite("algae",265,117,58)}${placedSprite("fish",450,129,66)}${placedSprite("heron",700,70,106)}`:
+`<path d="M0 169h960v10H0z" fill="#4b7c35"/><path d="M0 179h960v11H0z" fill="#9c6945"/><path d="M0 182h35v8H0zM80 182h45v8H80zM180 182h30v8h-30zM290 182h45v8h-45zM410 182h40v8h-40zM550 182h30v8h-30zM690 182h35v8h-35zM820 182h50v8h-50z" fill="#815337"/>${placedSprite("grass",190,108,65)}${placedSprite("rabbit",410,95,78)}${placedSprite("hawk",650,68,80)}`}`}
+</svg>`;
+}
+function world(n){return `<section class="world"><div class="worldhead"><h2>WORLD 0${n+1} / ${["MEADOW","POND","OCEAN"][n]}</h2><span>MISSION ${n+1} OF 3</span></div>${scenery(n)}</section>`}
+function panel(title,body,gold=false){return `<section class="panel"><div class="panel-title ${gold?"gold":""}">${title}</div><div class="content">${body}</div></section>`}
+function chainHTML(){return `<div class="chain"><div class="chainitem">${sunSVG()}<span>Sunlight</span></div>${state.chain.map(id=>`<span class="arrow">→</span><div class="chainitem">${sprite(id)}<span>${animals[id].n}</span></div>`).join("")}${state.chain.length===0?'<span class="arrow">→</span><div class="slots"><span class="slot">1</span><span class="slot">2</span><span class="slot">3</span></div>':""}</div>`}
+function token(id){return `<button class="token" onclick="addChain('${id}')">${sprite(id)}<span class="tokenlabel">${animals[id].n}</span></button>`}
+function render(){
+document.body.classList.toggle("intro-open",inIntro);
+$("#intro").classList.toggle("hide",!inIntro);
+$("#report").classList.add("hide");
+$("#play").classList.toggle("hide",inIntro);
+if(inIntro){renderIntro();return}
+if(state.stage>available())state.stage=available();
+if(state.stage===0)meadow();if(state.stage===1)pond();if(state.stage===2)ocean();if(state.stage===3)report();
+refreshLocks();
+}
+function go(n){if(n>available())return;selected=null;state.stage=n;inIntro=false;render();window.scrollTo(0,0)}
+function meadow(){
+$("#play").innerHTML=world(0)+`<div class="questgrid">`+
+panel("Activity / Follow the sunlight",`
+<h2>Build your first food chain</h2><p>Carry energy from sunlight through <strong>three organisms</strong>.</p>
+<div class="guide green"><span class="term">Producers</span> make their own food. Grass uses <span class="term">photosynthesis</span> to capture light energy and store it in sugars.<br><br><span class="term">Consumers</span> get energy by eating organisms. <span class="term">Herbivores</span> eat producers. <span class="term">Carnivores</span> eat other animals.</div>
+<p class="small">Rabbits eat grass. Foxes and hawks eat rabbits. Choose either predator. In this pathway, the rabbit is a herbivore and its predator acts as a carnivore. Both are consumers.</p>
+<p><strong>Tap in order: producer → herbivore → carnivore.</strong></p>
+${chainHTML()}<div class="inventory">${["fox","grass","hawk","rabbit"].map(token).join("")}</div>
+<div class="actions"><button onclick="checkChain()">Check chain</button><button class="secondary" onclick="undoChain()">Undo</button><button class="secondary" onclick="clearChain()">Clear</button></div>
+<div id="cm" class="feedback ${state.chainOK&&chainCorrect()?"good":""}" role="status">${state.chainOK&&chainCorrect()?"Chain complete! Producer → herbivore → carnivore. Both animal roles are consumers.":"Arrows follow the energy. Sunlight is the source, not an organism or trophic level."}</div>`,true)+
+panel("Field notes / Name the roles",`
+<h2>Who does what?</h2><p>Complete the food-chain activity first. Then apply what you learned.</p>
+${options("producer","1. Which organism is a producer?",["Grass","Rabbit","Fox"])}
+${options("consumer","2. Which statement describes consumers?",["They get energy by eating organisms.","They create energy from nothing.","Only meat-eating animals are consumers."])}
+${options("herbivore","3. Why is the rabbit a herbivore?",["It eats a producer.","It makes food from sunlight.","It eats a predator."])}
+${options("carnivore","4. Why does the rabbit-eating predator act as a carnivore?",["It gets energy directly from sunlight.","It eats other animals.","It eats only producers."])}
+<div class="actions"><button onclick="checkMeadow()">Check field notes</button></div>
+<div id="mq" class="feedback ${state.cq&&notesCorrect(0)?"good":""}" role="status">${state.cq&&notesCorrect(0)?"Field notes complete! Herbivores and carnivores are types of consumers.":"Check your answers to see green for correct answers and red for answers to revise."}</div>
+<p class="requirements">Complete a correct chain and check all four correct field-note answers to open the pond.</p>
+<div class="actions"><button data-next="1" onclick="go(1)">Next habitat →</button></div>`)+`</div>`;
+}
+function addChain(id){
+if(state.chain.length>=3){message("cm","Your chain has three organisms. Use Undo or Clear to change it.");return}
+if(state.chain.includes(id)){message("cm","Choose a different organism for the next step.");return}
+state.chain.push(id);state.chainOK=false;render();
+}
+function undoChain(){state.chain.pop();state.chainOK=false;render()}
+function clearChain(){state.chain=[];state.chainOK=false;render()}
+function checkChain(){
+state.chainOK=false;
+const hint=state.chain.length!==3?"Build a chain with three organisms. Start with the producer.":state.chain[0]!=="grass"?"Which organism captures sunlight through photosynthesis?":state.chain[1]!=="rabbit"?"The next organism must eat grass. Look for the herbivore.":!chainCorrect()?"Choose a carnivore that eats rabbits.":"";
+if(hint){message("cm","Hint: "+hint);refreshLocks();return}state.chainOK=true;render();
+}
+function gradeGroup(n){groups[n].forEach(id=>setResult(id,state.vocab[id]===correct[id]));state[["cq","wq","eq"][n]]=notesCorrect(n);refreshLocks()}
+function checkMeadow(){
+gradeGroup(0);if(notesCorrect(0)){render();return}
+const hints={producer:"A producer makes its own food using sunlight. Look at grass.",consumer:"Consumers include plant-eaters and animal-eaters.",herbivore:"Grass is a producer. What does the rabbit eat?",carnivore:"A consumer eating another animal acts as a carnivore."};
+const bad=groups[0].find(id=>state.vocab[id]!==correct[id]);message("mq","Revise the red answers. Hint: "+hints[bad]);
+}
+function webHTML(edges,removed="",print=false){
+const pos={algae:[78,190],snail:[238,277],zoop:[238,81],fish:[408,190],heron:[558,71]},mark=print?"reportArrow":"webArrow";
+return `<svg class="websvg" viewBox="0 0 640 350" role="img" aria-label="Pond food web${removed?", with "+animals[removed].n+" removed":""}. Arrows show energy from food to eater.">
+<defs><marker id="${mark}" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="#344bb3"/></marker></defs>
+<rect x="2" y="2" width="636" height="346" fill="#d7e7ed" stroke="#92b5b4" stroke-width="3"/>
+${edges.map(e=>{const[a,b]=e.split(">"),[x,y]=pos[a],[xx,yy]=pos[b],dx=xx-x,dy=yy-y,d=Math.hypot(dx,dy);return `<line x1="${x+dx/d*37}" y1="${y+dy/d*37}" x2="${xx-dx/d*40}" y2="${yy-dy/d*40}" stroke="#344bb3" stroke-width="4" marker-end="url(#${mark})" ${a===removed||b===removed?'opacity=".12" stroke-dasharray="6 6"':""}/>`}).join("")}
+${Object.entries(pos).map(([id,[x,y]])=>`<g opacity="${id===removed?0.18:1}"><rect x="${x-34}" y="${y-34}" width="68" height="68" fill="#adcbe9" stroke="${selected===id?"#dc8a2c":"#192440"}" stroke-width="3"/>${placedSprite(id,x-30,y-30,60)}<text x="${x}" y="${y+53}" fill="#192440" font-family="system-ui,sans-serif" font-size="15" font-weight="800" text-anchor="middle">${animals[id].n}</text></g>`).join("")}</svg>`;
+}
+function investigationHTML(){
+const i=state.invest;
+return `<div class="guide"><h3>Further investigation / Remove one organism</h3>
+<p class="small"><strong>1.</strong> Choose an organism below. Watch which arrows disappear from the food web. These arrows represent lost feeding links.</p>
+<label>Organism to remove<select data-answer="removed" aria-describedby="status-removed" onchange="changeRemoved(this.value)"><option value="">Choose an organism</option>${["algae","snail","zoop","fish"].map(id=>`<option value="${id}" ${i.removed===id?"selected":""}>${animals[id].n}</option>`).join("")}</select>${answerStatus("removed")}</label>
+<p id="removalText" class="small"></p><p class="small"><strong>2.</strong> Follow the remaining arrows and record what you observe.</p>
+<label>Which consumer loses a food source?<select data-answer="investConsumer" aria-describedby="status-investConsumer" onchange="changeInvestConsumer(this.value)"><option value="">Choose a consumer</option>${["snail","zoop","fish","heron"].filter(id=>id!==i.removed).map(id=>`<option value="${id}" ${i.consumer===id?"selected":""}>${animals[id].n}</option>`).join("")}</select>${answerStatus("investConsumer")}</label>
+<label>Does that consumer still have another food source shown?<select data-answer="investAlternative" aria-describedby="status-investAlternative" onchange="changeInvestAlternative(this.value)"><option value="">Choose an answer</option><option value="yes" ${i.alternative==="yes"?"selected":""}>Yes</option><option value="no" ${i.alternative==="no"?"selected":""}>No</option></select>${answerStatus("investAlternative")}</label>
+<label>Your observations<textarea data-answer="investObservation" aria-describedby="status-investObservation" placeholder="Name the organism removed, the consumer affected, and any remaining food sources. Explain what you think could happen to the consumer." oninput="changeInvestObservation(this.value)">${esc(i.observation)}</textarea>${answerStatus("investObservation")}</label>
+<p class="tiny">The diagram shows available food links. Population and diet changes are predictions, not measured simulation results. Your teacher will review your written explanation.</p>
+<div class="actions"><button onclick="checkInvestigation()">Check investigation</button></div>
+<div id="im" class="feedback ${i.checked&&investigationValid()?"good":""}" role="status">${i.checked&&investigationValid()?"Investigation complete. Your choices are correct and your observation is recorded for the report.":"Complete the two food-source questions and record your observations to finish this investigation."}</div></div>`;
+}
+function pond(){
+$("#play").innerHTML=world(1)+`<div class="questgrid">`+
+panel("Activity / Weave a food web",`
+<h2>Connect the pond</h2><p>A food web connects overlapping food chains. Build <strong>all seven feeding links</strong>.</p>
+<div class="guide green"><strong>Pond observations</strong><br>Snails eat algae. Zooplankton eat algae. Small fish eat algae, zooplankton, and snails. Herons eat small fish and snails.</div>
+<p class="small"><strong>Tap the food, then its eater</strong> using the organism buttons. Tap a saved link to remove it.</p>
+<div id="webdrawing">${webHTML(state.edges,state.webOK&&webCorrect()?state.invest.removed:"")}</div>
+<div class="inventory web">${["algae","snail","zoop","fish","heron"].map(id=>`<button class="token" id="node-${id}" aria-pressed="false" onclick="tapNode('${id}')">${sprite(id)}<span class="tokenlabel">${animals[id].n}</span></button>`).join("")}</div>
+<div id="wm" class="feedback ${state.webOK&&webCorrect()?"good":""}" role="status">${state.webOK&&webCorrect()?"All seven links connected! Complete the field notes and further investigation.":"Choose a food organism first, then an organism that eats it."}</div>
+<div class="links">${state.edges.map(e=>`<button onclick="removeEdge('${e}')" aria-label="Remove link ${e.split(">").map(x=>animals[x].n).join(" to ")}">${e.split(">").map(x=>animals[x].n).join(" → ")} ×</button>`).join("")}</div>
+<p class="tiny">${state.edges.length} of 7 links connected. Arrows point from food to eater.</p>
+${state.webOK&&webCorrect()?'<p class="small">In the removal investigation, faded organisms and arrows represent the organism and feeding links that are no longer available.</p>':""}`,true)+
+panel("Field notes / Trace the pathways",`
+<h2>Energy connects the web</h2><p class="small">Build the food web first. Then use its pathways to answer these questions.</p>
+<div class="guide"><span class="term">Trophic level</span> means feeding position in a chain. Producers occupy level 1. Small fish eating algae feed at level 2; eating algae-eating snails places them at level 3 in that pathway.</div>
+<p class="small">The heron is a <span class="term">carnivore</span>: it eats animals. The small fish shown here eats producers and animals; this mixed diet makes it an omnivore.</p>
+<p><span class="term">Respiration</span> releases usable energy from food in cells. Producers and consumers both respire. As organisms use energy for life processes, energy is eventually released as heat.</p>
+${options("photo","5. What does photosynthesis do?",["Stores captured light energy in sugars.","Recycles heat back into sunlight.","Gets energy by eating animals."])}
+${options("resp","6. Which organisms carry out respiration?",["Both producers and consumers.","Only consumers.","Only predators."])}
+${options("trophic","7. In algae → snail → heron, what is the snail’s trophic level?",["Level 1","Level 2","Level 3"])}
+<div class="actions"><button onclick="checkPond()">Check field notes</button></div>
+<div id="pq" class="feedback ${state.wq&&notesCorrect(1)?"good":""}" role="status">${state.wq&&notesCorrect(1)?"Field notes complete! Trace a pathway to identify a feeding position.":"Check your answers. Green answers are correct; revise the red ones."}</div>
+${state.webOK&&webCorrect()?investigationHTML():'<div class="guide"><h3>Further investigation</h3><p class="small">Connect all seven food-web links to open the organism-removal investigation.</p></div>'}
+<p class="requirements">To open the ocean: connect all seven links, check all three correct field-note answers, and finish the further investigation.</p>
+<div class="actions"><button data-next="2" onclick="go(2)">Next habitat →</button></div>`)+`</div>`;
+if(state.webOK&&webCorrect())updateRemoval();
+}
+function tapNode(id){
+if(!selected){
+selected=id;document.querySelectorAll("[id^=node-]").forEach(e=>{const yes=e.id==="node-"+id;e.classList.toggle("selected",yes);e.setAttribute("aria-pressed",String(yes))});
+message("wm",animals[id].n+" selected as food. Now tap an organism that eats it.");return;
+}
+const a=selected;selected=null;
+document.querySelectorAll("[id^=node-]").forEach(e=>{e.classList.remove("selected");e.setAttribute("aria-pressed","false")});
+if(a===id){message("wm","Choose two different organisms: food first, eater second.");return}
+const e=a+">"+id;
+if(!allowed.includes(e)){message("wm","Hint: check the pond observations. Does "+animals[id].n.toLowerCase()+" eat "+animals[a].n.toLowerCase()+"? Point the arrow from food to eater.");return}
+if(state.edges.includes(e)){message("wm","That link is already connected. Look for a different feeding relationship.");return}
+state.edges.push(e);state.webOK=webCorrect();render();
+message("wm",state.webOK?"All seven links complete! The further investigation is open.":`Link connected! ${state.edges.length} of 7 complete.`,true);
+}
+function removeEdge(e){state.edges=state.edges.filter(x=>x!==e);state.webOK=false;state.invest.checked=false;selected=null;render()}
+function checkPond(){
+gradeGroup(1);if(notesCorrect(1)){render();return}
+const hints={photo:"Photosynthesis captures light energy and stores it in sugars.",resp:"Plants need usable energy in their cells too. Both producers and consumers respire.",trophic:"Count from the producer: algae = level 1. What comes next?"};
+const bad=groups[1].find(id=>state.vocab[id]!==correct[id]);message("pq","Revise the red answers. Hint: "+hints[bad]);
+}
+function updateRemoval(){
+const id=state.invest.removed,e=$("#removalText");if(!e)return;
+e.textContent=id?animals[id].n+" is removed. Its feeding arrows are faded. Follow the remaining arrows into each consumer to find any alternative food sources.":"Choose an organism, then compare the food web before and after its removal.";
+}
+function changeRemoved(id){
+state.invest={...freshInvestigation(),removed:id};
+["removed","investConsumer","investAlternative","investObservation"].forEach(clearResult);render();
+}
+function changeInvestConsumer(value){
+state.invest.consumer=value;state.invest.alternative="";state.invest.checked=false;
+clearResult("investConsumer");clearResult("investAlternative");
+const alt=document.querySelector('[data-answer="investAlternative"]');if(alt)alt.value="";
+message("im","Consumer changed. Check your investigation again when ready.");refreshLocks();
+}
+function changeInvestAlternative(value){
+state.invest.alternative=value;state.invest.checked=false;clearResult("investAlternative");
+message("im","Answer changed. Check your investigation again when ready.");refreshLocks();
+}
+function changeInvestObservation(value){state.invest.observation=value;state.invest.checked=false;clearResult("investObservation");refreshLocks()}
+function checkInvestigation(){
+const i=state.invest,removedOK=["algae","snail","zoop","fish"].includes(i.removed);
+const consumerOK=removedOK&&affectedConsumers(i.removed).includes(i.consumer);
+const alternativeOK=consumerOK&&i.alternative===(remainingFoods(i.removed,i.consumer).length?"yes":"no");
+const recorded=i.observation.trim().length>0;
+setResult("removed",removedOK,removedOK?"✓ Organism selected":"✗ Choose an organism to remove");
+setResult("investConsumer",consumerOK);setResult("investAlternative",alternativeOK);
+setResult("investObservation",recorded,recorded?"✓ Observation recorded — teacher reviews the explanation":"✗ Record your observations");
+i.checked=removedOK&&consumerOK&&alternativeOK&&recorded;refreshLocks();
+if(i.checked){message("im","Investigation complete! Your food-source choices are correct. Your written observation is recorded for teacher review.",true);return}
+message("im",!removedOK?"Choose an organism to remove first.":!consumerOK?"Hint: find a faded arrow that used to go from the removed organism into a consumer.":!alternativeOK?"Hint: look for any remaining arrows pointing into your chosen consumer.":"Write your observations before completing the investigation.");
+}
+function pyramid(vals){return `<div class="pyramid">${[3,2,1,0].map((n,k)=>`<div class="tier" style="width:${[37,57,78,100][k]}%;background:${["#edab72","#ffd765","#c6df79","#87bd65"][k]}">${["Phytoplankton","Krill","Sardines","Tuna"][n]}<small>Level ${n+1} · ${esc(vals[n])} kJ</small></div>`).join("")}</div>`}
+function changeEnergy(i,v){
+state.energy[i]=v;state.energyOK=false;clearResult("e"+i);
+$("#budgetgraphic").innerHTML=pyramid([10000,...state.energy.map(x=>x===""?"?":x)]);
+message("em","Budget changed. Check all three calculations again.");refreshLocks();
+}
+function ocean(){
+$("#play").innerHTML=world(2)+`<div class="questgrid">`+
+panel("Activity / The energy budget",`
+<h2>Climb the trophic levels</h2><p>Follow this simplified ocean pathway:</p>
+<div class="chain">${["phyto","krill","sardine","tuna"].map((id,i)=>`${i?'<span class="arrow">→</span>':""}<div class="chainitem">${sprite(id)}<span>${animals[id].n}</span></div>`).join("")}</div>
+<p class="small">Krill eat producers. Sardines eat krill, and tuna eat sardines. Sardines and tuna act as <span class="term">carnivores</span> in these feeding links.</p>
+<div class="guide green"><strong>The approximate 10% rule:</strong> about 10% of the energy at one trophic level becomes new biomass at the next level. Multiply by <strong>0.10</strong> or <strong>divide by 10</strong>. Actual transfer efficiency varies.</div>
+<p>Begin with <strong>10,000 kJ</strong> stored in phytoplankton biomass. These tiny producers have already captured the energy through photosynthesis; this is not all the sunlight reaching the ocean.</p>
+${["Krill · level 2","Sardines · level 3","Tuna · level 4"].map((n,i)=>`<label>${n}: available energy in kJ<input type="number" inputmode="decimal" min="0" data-answer="e${i}" aria-describedby="status-e${i}" value="${esc(state.energy[i])}" oninput="changeEnergy(${i},this.value)">${answerStatus("e"+i)}</label>`).join("")}
+<div class="actions"><button onclick="checkEnergy()">Check energy budget</button></div>
+<div id="em" class="feedback ${state.energyOK&&energyCorrect()?"good":""}" role="status">${state.energyOK&&energyCorrect()?"Budget complete! 10,000 → 1,000 → 100 → 10 kJ.":"Start with the producer energy and divide by 10 at each transfer."}</div>
+<div id="budgetgraphic">${pyramid([10000,...state.energy.map(x=>x===""?"?":x)])}</div>`,true)+
+panel("Field notes / Why a pyramid?",`
+<h2>Where does the energy go?</h2><p class="small">Complete the energy budget first. Then explain the pattern.</p>
+<p>An <strong>energy pyramid</strong> compares available energy at trophic levels over the same area and time. Less energy reaches higher levels, so the bars become narrower.</p>
+<div class="guide green"><strong>For every 100 units at one level…</strong><div class="energybar" role="img" aria-label="About 10 units transfer to the next level; about 90 do not"></div><p class="small"><strong>Green:</strong> about 10 units become biomass at the next level.<br><strong>Orange:</strong> about 90 do not transfer there.</p><p class="small">Some energy is used in respiration and eventually released as heat. Some stays in uneaten material or waste, making energy available to decomposers. The remaining 90% is <strong>not all immediate heat</strong>.</p></div>
+<p class="small"><strong>Energy flows; matter cycles.</strong> Decomposers process remains and waste, but do not recycle heat into usable food energy.</p>
+${options("loss","8. Why is less energy available higher in the pyramid?",["Organisms use energy; some leaves as heat, waste, and uneaten material.","Predators destroy energy.","Energy is recycled completely at each level."])}
+${options("pyramid","9. What does this energy pyramid show?",["Energy available at each trophic level.","The exact number of organisms at each level.","The body size of each organism."])}
+<div class="actions"><button onclick="checkOcean()">Check understanding</button></div>
+<div id="oq" class="feedback ${state.eq&&notesCorrect(2)?"good":""}" role="status">${state.eq&&notesCorrect(2)?"Understanding check complete! You’ve explained the pyramid’s shape.":"Check your answers. Green answers are correct; revise the red ones."}</div>
+<p class="requirements">Check all three correct calculations and both correct understanding answers to open your field report.</p>
+<div class="actions"><button data-next="3" onclick="go(3)">Create field report →</button></div>`)+`</div>`;
+}
+function checkEnergy(){
+const expected=[1000,100,10];
+expected.forEach((v,i)=>setResult("e"+i,String(state.energy[i]).trim()!==""&&Number(state.energy[i])===v));
+state.energyOK=energyCorrect();refreshLocks();
+if(state.energyOK){render();return}
+const bad=expected.findIndex((v,i)=>String(state.energy[i]).trim()===""||Number(state.energy[i])!==v);
+message("em",`Revise the red answers. Hint for ${["krill","sardines","tuna"][bad]}: divide ${(bad===0?10000:expected[bad-1]).toLocaleString()} kJ from the previous level by 10.`);
+}
+function checkOcean(){
+gradeGroup(2);if(notesCorrect(2)){render();return}
+const bad=groups[2].find(id=>state.vocab[id]!==correct[id]);
+message("oq",bad==="loss"?"Revise the red answers. Hint: trace where energy goes during life processes, respiration, and waste production.":"Revise the red answer. Hint: kilojoules measure energy.");
+}
+const prompts=[
+"Use your meadow chain to explain how energy from sunlight reaches a predator. Include producers, consumers, herbivores, carnivores, and photosynthesis.",
+"Use your pond wood web to describe what happens when one organism is removed. Name a consumer affected, if it changes food sources for any organisms, and explain how a food web can give more information than a food chain.",
+"Explain why the ocean energy pyramid narrows toward the top. Include respiration, trophic level, and the approximate 10% rule. Where does energy that does not reach the next level go?"
+];
+function report(){
+$("#play").innerHTML=panel("Expedition complete / Your field report",`
+<div class="reportheading"><div><span class="badge">ALL THREE HABITATS COMPLETE</span><h2>Record your discoveries</h2></div><label class="reportname">Your name<input type="text" maxlength="100" placeholder="Name and class period" value="${esc(state.name)}" oninput="state.name=this.value;save()"></label></div>
+<p>Your diagrams and mission results are ready. Add three short explanations in your own words, then preview your printable report.</p>
+<div class="guide green"><strong>Your pond investigation is recorded.</strong><p class="small">You removed ${animals[state.invest.removed].n.toLowerCase()} and investigated ${animals[state.invest.consumer].n.toLowerCase()}. Use those observations in explanation #2.</p><p class="written">${esc(state.invest.observation)}</p></div>
+${prompts.map((p,i)=>`<label><strong>${i+1}. ${p}</strong><textarea placeholder="Explain using evidence from your missions." oninput="state.answers[${i}]=this.value;save()">${esc(state.answers[i])}</textarea></label>`).join("")}
+<div id="reportmsg" class="feedback" role="status">Your written explanations are reviewed by your teacher. They are not automatically marked right or wrong.</div>
+<div class="actions"><button onclick="previewReport()">Preview field report →</button></div><p class="tiny" style="margin-top:20px">Keep this tab open until you have printed or saved your report.</p>`,true);
+}
+function previewReport(){
+if(available()<3){render();return}
+if(state.answers.some(a=>!a.trim())){message("reportmsg","Add a short explanation for each prompt before previewing your report.");return}
+const words=[["Producers","Grass makes its own food."],["Consumers",correct.consumer],["Herbivores","The rabbit eats a producer."],["Carnivores","The rabbit-eating predator gets energy by eating another animal."],["Photosynthesis",correct.photo],["Respiration",correct.resp],["Trophic level","The snail is at level 2 in algae → snail → heron."]];
+const i=state.invest,foods=remainingFoods(i.removed,i.consumer);
+$("#play").classList.add("hide");$("#report").classList.remove("hide");
+$("#report").innerHTML=`<div class="panel-title">Energy Expedition / Student field report</div><div class="content">
+<div class="toolbar"><button onclick="window.print()">Print / Save as PDF</button><button class="secondary" onclick="render()">Edit explanations</button></div>
+<p class="noprint small">On iPad, use your browser’s Share → Print, or the print button above. Use the print preview’s share controls to save a PDF to Files. Available options depend on your browser.</p>
+<h2>${esc(state.name.trim()||"Ecosystem explorer")}</h2><p>Meadow → Pond → Ocean</p>
+<div class="reportblock"><h3>Mission results</h3><p>✓ Food chain: 3 organisms connected correctly<br>✓ Food web: 7 feeding links connected correctly<br>✓ Pond investigation: food-source choices correct and observation recorded<br>✓ Energy pyramid: 3 calculations correct using approximate 10% transfer<br>✓ Vocabulary and concept checks: 9 of 9 completed correctly after feedback</p><p class="tiny">Results show completion with unlimited hints and retries. Written observations and explanations require teacher review.</p></div>
+<div class="reportblock"><h3>1. Meadow food chain</h3>${chainHTML()}<p class="small">Producer → herbivore → carnivore. Both animal roles are consumers. Arrows show energy flow; sunlight supplies the producer.</p><p class="written">${esc(state.answers[0])}</p></div>
+<div class="reportblock"><h3>2. Pond food web</h3>${webHTML(state.edges,"",true)}</div>
+<div class="reportblock"><h3>Further investigation / Organism removal</h3><p><strong>Organism removed:</strong> ${animals[i.removed].n}<br><strong>Consumer losing a food source:</strong> ${animals[i.consumer].n}<br><strong>Another food source remains:</strong> ${i.alternative==="yes"?"Yes":"No"}<br><strong>Remaining food sources shown:</strong> ${foods.length?foods.map(id=>animals[id].n).join(", "):"None"}</p><p><strong>Student’s recorded observations:</strong></p><p class="written">${esc(i.observation)}</p><p class="tiny">The model shows feeding links; population or diet changes are student predictions.</p></div>
+<div class="reportblock"><h3>Food-web explanation</h3><p class="written">${esc(state.answers[1])}</p></div>
+<div class="reportblock"><h3>3. Ocean energy pyramid</h3>${pyramid([10000,...state.energy])}<p class="tiny">Simplified pathway; energy values refer to the same area and time. Actual transfer efficiency varies.</p><p class="written">${esc(state.answers[2])}</p></div>
+<div class="reportblock"><h3>Vocabulary evidence</h3><table><thead><tr><th>Term</th><th>Correct application completed</th></tr></thead><tbody>${words.map(([w,a])=>`<tr><td>${w}</td><td>${esc(a)}</td></tr>`).join("")}</tbody></table></div></div>`;
+window.scrollTo(0,0);
+}
+function openReset(){$("#resetDialog").showModal()}
+function resetGame(){$("#resetDialog").close();state=blank();selected=null;inIntro=true;render();window.scrollTo(0,0)}
+render();
+</script>
+</body>
+</html>
